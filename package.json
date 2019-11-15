@@ -1,0 +1,10 @@
+{
+  "name": "github-jira-status-check",
+  "description": "",
+  "version": "0.1.0",
+  "dependencies": {},
+  "devDependencies": {
+    "serverless-python-requirements": "^4.2.4",
+    "serverless-secrets-plugin": "^0.1.0"
+  }
+}
