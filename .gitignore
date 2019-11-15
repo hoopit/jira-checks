@@ -288,4 +288,4 @@ pip-selfcheck.json
 
 # End of https://www.gitignore.io/api/node,python,serverless,pycharm+iml
 /.idea/aws.xml
-secrets.*.yml
+secrets/
