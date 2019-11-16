@@ -39,6 +39,9 @@ provider:
   versionFunctions: false
   timeout: 10
 
+  iamManagedPolicies:
+    - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+
 
 # you can overwrite defaults here
 #  stage: dev
