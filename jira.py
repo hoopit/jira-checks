@@ -58,6 +58,8 @@ class TransitionEvent:
         self.workflowId = transition['workflowId']
         self.workflowName = transition['workflowName']
         self.transitionId = transition['transitionId']
+        self.transitionName = transition['transitionName']
+        self.to_status = transition['to_status']
         self.issue_id = data['issue']['id']
         self.issue_key = data['issue']['key']
 
@@ -95,5 +97,12 @@ class JiraClient:
             f'{Config.jira_cloud_url}/rest/dev-status/1.0/issue/detail?issueId={issue_id}&applicationType=GitHub&dataType=pullrequest',
             auth=self.auth
         )
+        print(json.dumps(r.json()))
+        return r.json()
+
+    def get_workflow(self, name: str):
+        r = requests.get(
+            f'{Config.jira_cloud_url}/rest/api/3/workflow/search?workflowName={name}&expand=statuses.properties,transitions.rules',
+            auth=self.auth)
         print(json.dumps(r.json()))
         return r.json()

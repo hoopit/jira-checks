@@ -1,5 +1,5 @@
 import json
-from typing import Dict
+from typing import Dict, Tuple
 
 from GithubClient import GithubClient
 from config import Config
@@ -8,13 +8,29 @@ from jira import JiraClient, TransitionEvent
 
 def enable_debug_logging():
     import logging
-    import http.client
-    http.client.HTTPConnection.debuglevel = 1
+    # http.client.HTTPConnection.debuglevel = 1
     logging.basicConfig()
     logging.getLogger().setLevel(logging.DEBUG)
     requests_log = logging.getLogger("requests.packages.urllib3")
     requests_log.setLevel(logging.DEBUG)
     requests_log.propagate = True
+
+
+def _get_status_properties(workflow_name: str, status_name: str) -> Tuple[str, str]:
+    workflow = JiraClient().get_workflow(workflow_name)
+    statuses = workflow['values'][0]['statuses']
+    target_status = next(x for x in statuses if x['name'] == status_name)
+    properties = target_status['properties']
+    state = next(x['value'] for x in properties if x['key'] == 'githubCheckState')
+    description = next(x['value'] for x in properties if x['key'] == 'githubCheckDescription')
+    return state, description
+
+
+def _get_transition_properties(transition_id: int, workflow_name: str) -> Tuple[str, str]:
+    properties = JiraClient().get_transition_properties(transition_id, workflow_name)
+    state = next(x['value'] for x in properties if x['key'] == 'githubCheckState')
+    description = next(x['value'] for x in properties if x['key'] == 'githubCheckDescription')
+    return state, description
 
 
 def handle_transition(event, context) -> Dict:
@@ -29,12 +45,12 @@ def handle_transition(event, context) -> Dict:
     body: Dict = json.loads(event['body'])
     print(f"body: {json.dumps(body)}")
     transition_event = TransitionEvent(data=body)
-    properties = JiraClient().get_transition_properties(transition_event.transitionId, transition_event.workflowName)
+    properties = _get_transition_properties(transition_event.transitionId, transition_event.workflowName)
     payload = {
         'context': Config.check_name,
         'target_url': f'{Config.jira_cloud_url}/browse/{transition_event.issue_key}',
-        'state': next((x['value'] for x in properties if x['key'] == 'githubCheckState'), None),
-        'description': next((x['value'] for x in properties if x['key'] == 'githubCheckDescription'), None)
+        'state': properties[0],
+        'description': properties[1]
     }
     print(f"payload: {json.dumps(payload)}")
     if payload:
