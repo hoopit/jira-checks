@@ -1,5 +1,8 @@
+from __future__ import annotations, absolute_import
+
 import json
-from typing import Dict, Tuple
+import os
+from typing import Dict, Tuple, Optional
 
 from GithubClient import GithubClient
 from config import Config
@@ -16,24 +19,27 @@ def enable_debug_logging():
     requests_log.propagate = True
 
 
-def _get_status_properties(workflow_name: str, status_name: str) -> Tuple[str, str]:
-    workflow = JiraClient().get_workflow(workflow_name)
-    statuses = workflow['values'][0]['statuses']
-    target_status = next(x for x in statuses if x['name'] == status_name)
-    properties = target_status['properties']
+def _get_status_properties(transition_event: TransitionEvent) -> Optional[Tuple[str, str]]:
+    new_status = transition_event.to_status.replace(" ", "_").capitalize()
+    state = os.getenv(f"STATUS_{new_status}_STATE")
+    desc = os.getenv(f"STATUS_{new_status}_DESC")
+    if not state or not desc:
+        return None
+    return state, desc
+
+
+def _get_transition_properties(transition_event: TransitionEvent) -> Tuple[str, str]:
+    properties = JiraClient().get_transition_properties(transition_event.transitionId, transition_event.workflowName)
     state = next(x['value'] for x in properties if x['key'] == 'githubCheckState')
     description = next(x['value'] for x in properties if x['key'] == 'githubCheckDescription')
     return state, description
 
 
-def _get_transition_properties(transition_id: int, workflow_name: str) -> Tuple[str, str]:
-    properties = JiraClient().get_transition_properties(transition_id, workflow_name)
-    state = next(x['value'] for x in properties if x['key'] == 'githubCheckState')
-    description = next(x['value'] for x in properties if x['key'] == 'githubCheckDescription')
-    return state, description
+def _get_properties(transition_event: TransitionEvent):
+    return _get_status_properties(transition_event) or _get_transition_properties(transition_event)
 
 
-def handle_transition(event, context) -> Dict:
+def handle_transition(event: dict, context) -> Dict:
     """
     Jira transition webhook handler
     :param event: AWS Lambda proxy event
@@ -45,7 +51,7 @@ def handle_transition(event, context) -> Dict:
     body: Dict = json.loads(event['body'])
     print(f"body: {json.dumps(body)}")
     transition_event = TransitionEvent(data=body)
-    properties = _get_transition_properties(transition_event.transitionId, transition_event.workflowName)
+    properties = _get_transition_properties(transition_event)
     payload = {
         'context': Config.check_name,
         'target_url': f'{Config.jira_cloud_url}/browse/{transition_event.issue_key}',

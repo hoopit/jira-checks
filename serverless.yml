@@ -123,6 +123,14 @@ functions:
       GITHUB_URL: ${self:custom.secrets.GITHUB_URL}
       GITHUB_USER: ${self:custom.secrets.GITHUB_USER}
       GITHUB_API_KEY: ${self:custom.secrets.GITHUB_API_KEY}
+      STATUS_READY_FOR_TESTING_STATE: pending
+      STATUS_READY_FOR_TESTING_DESC: Issue is pending acceptance testing...
+      STATUS_TESTING_STATE: pending
+      STATUS_TESTING_DESC: Acceptance testing in progress
+      STATUS_CODE_REVIEW_STATE: success
+      STATUS_CODE_REVIEW_DESC: Issue is accepted!
+      STATUS_REJECTED_STATE: failure
+      STATUS_REJECTED_DESC: Issue was rejected!
 
 # you can add CloudFormation resource templates here
 #resources:

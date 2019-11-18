@@ -55,13 +55,13 @@ class TransitionEvent:
     def __init__(self, data) -> None:
         super().__init__()
         transition = data['transition']
-        self.workflowId = transition['workflowId']
-        self.workflowName = transition['workflowName']
-        self.transitionId = transition['transitionId']
-        self.transitionName = transition['transitionName']
-        self.to_status = transition['to_status']
-        self.issue_id = data['issue']['id']
-        self.issue_key = data['issue']['key']
+        self.workflowId: int = transition['workflowId']
+        self.workflowName: str = transition['workflowName']
+        self.transitionId: int = transition['transitionId']
+        self.transitionName: str = transition['transitionName']
+        self.to_status: str = transition['to_status']
+        self.issue_id: int = data['issue']['id']
+        self.issue_key: str = data['issue']['key']
 
 
 class JiraClient:
